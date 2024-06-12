@@ -3,12 +3,12 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
   Delete,
   HttpStatus,
   HttpCode,
   NotFoundException,
+  Put,
 } from '@nestjs/common';
 import { ConfigsService } from './configs.service';
 import { CreateConfigDto } from './dto/create-config.dto';
@@ -35,7 +35,7 @@ export class ConfigsController {
     return registry;
   }
 
-  @Patch(':id')
+  @Put(':id')
   update(
     @Param('id') id: number,
     @Body('updateConfigDto')

@@ -8,10 +8,13 @@ import {
   HttpStatus,
   NotFoundException,
   Body,
+  Res,
 } from '@nestjs/common';
 import { RegistriesService } from './registries.service';
 import { CreateRegistryDto } from './dto/create-registry.dto';
 import { RegistryEntity } from './entities/registry.entity';
+import * as XLSX from 'xlsx';
+import { Response } from 'express';
 
 @Controller('registries')
 export class RegistriesController {
@@ -37,18 +40,51 @@ export class RegistriesController {
   }
 
   @Get(':firstDate/:lastDate')
-  findByIntervalDate(
-    firstDate: Date,
-    lastDate: Date,
-  ): Promise<RegistryEntity[]> {
-    const registries = this.registriesService.findByIntervalDate(
+  async downloadByIntervalDate(
+    @Param('firstDate') firstDate: Date,
+    @Param('lastDate') lastDate: Date,
+    @Res() res: Response,
+  ): Promise<void> {
+    const registries = await this.registriesService.findByIntervalDate(
       firstDate,
       lastDate,
     );
-    if (!registries) {
-      throw new NotFoundException(`Registries not found on this interval`);
+
+    if (!registries || registries.length === 0) {
+      res.status(404).send({ message: 'Nenhum registro encontrado' });
+      return;
     }
-    return registries;
+
+    const formattedRegistries = registries.map((registry) => ({
+      ID: registry.id,
+      Temperatura: registry.temperature,
+      Umidade: registry.humidity,
+      'Data de Criação': new Date(registry.created_at).toLocaleString('pt-BR', {
+        timeZone: 'UTC',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+      }),
+    }));
+
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(formattedRegistries);
+    XLSX.utils.book_append_sheet(wb, ws, 'Registros');
+
+    const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'buffer' });
+
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    );
+    res.setHeader(
+      'Content-Disposition',
+      'attachment; filename=registries.xlsx',
+    );
+    res.send(excelBuffer);
   }
 
   @Delete(':id')

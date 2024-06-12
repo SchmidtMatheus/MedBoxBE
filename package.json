@@ -30,9 +30,12 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "pg": "^8.11.5",
+    "primeicons": "^7.0.0",
+    "primevue": "^3.52.0",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1",
-    "typeorm": "^0.3.20"
+    "typeorm": "^0.3.20",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.0.0",
